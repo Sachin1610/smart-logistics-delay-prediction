@@ -35,16 +35,11 @@ drop_cols = [
     'Sales per customer',
     'Order Item Product Price'
 ]
-
 df = df.drop(columns=drop_cols)
-
-print("Dropped repeated cols:", len(drop_cols))
 print("New shape:", df.shape)
-
 # split target and features
 y = df['Late_delivery_risk']
 X = df.drop(columns=['Late_delivery_risk'])
-
 print("X shape:", X.shape)
 print("y shape:", y.shape)
 
@@ -52,9 +47,7 @@ print("y shape:", y.shape)
 cat_cols = X.select_dtypes(include=['object']).columns.tolist()
 
 print("Categorical cols:", cat_cols)
-
 X_encoded = pd.get_dummies(X, columns=cat_cols, drop_first=True)
-
 print("Shape after encoding:", X_encoded.shape)
 
 # train, validation, test split Data
@@ -79,7 +72,7 @@ print("Train Size :", X_train.shape[0])
 print("Validation Size:", X_val.shape[0])
 print("Test Size:", X_test.shape[0])
 
-print("Late % in splits ")
+print("\nLate % in splits ")
 print("Train Size:", round(y_train.mean()*100,1))
 print("Validation Size:", round(y_val.mean()*100,1))
 print("Test Size:", round(y_test.mean()*100,1))
@@ -220,70 +213,120 @@ print()
 
 print("\nFinal Test Results")
 
-models = {
-    'Logistic Regression': (lr_best, X_test_scaled),
-    'Decision Tree': (dt_best, X_test),
-    'Random Forest': (rf_best, X_test)
-}
+# logistic regression on test set
+print("\nLogistic Regression")
 
-results = {}
+lr_pred = lr_best.predict(X_test_scaled)
+lr_prob = lr_best.predict_proba(X_test_scaled)[:,1]
 
-for name, (model, xdata) in models.items():
+lr_acc = accuracy_score(y_test, lr_pred)
+lr_prec = precision_score(y_test, lr_pred)
+lr_rec = recall_score(y_test, lr_pred)
+lr_f1 = f1_score(y_test, lr_pred)
+lr_auc = roc_auc_score(y_test, lr_prob)
+lr_cm = confusion_matrix(y_test, lr_pred)
 
-    pred = model.predict(xdata)
-    prob = model.predict_proba(xdata)[:,1]
+print("Accuracy Score :", round(lr_acc,4))
+print("Precision Score:", round(lr_prec,4))
+print("Recall Score   :", round(lr_rec,4))
+print("F1 Score       :", round(lr_f1,4))
+print("ROC-AUC        :", round(lr_auc,4))
+print("Confusion Matrix")
+print(lr_cm)
 
-    acc = accuracy_score(y_test, pred)
-    prec = precision_score(y_test, pred)
-    rec = recall_score(y_test, pred)
-    f1 = f1_score(y_test, pred)
-    auc = roc_auc_score(y_test, prob)
-    cm = confusion_matrix(y_test, pred)
 
-    results[name] = {
-        'accuracy': acc,
-        'precision': prec,
-        'recall': rec,
-        'f1': f1,
-        'auc': auc,
-        'cm': cm,
-        'predictions': pred
-    }
+# decision tree on test set
+print("\nDecision Tree")
 
-    print("\n" + name)
-    print("Accuracy Score :", round(acc,4))
-    print("Precision Score:", round(prec,4))
-    print("Recall Score   :", round(rec,4))
-    print("F1 Score       :", round(f1,4))
-    print("ROC-AUC        :", round(auc,4))
+dt_pred = dt_best.predict(X_test)
+dt_prob = dt_best.predict_proba(X_test)[:,1]
 
-    print("Confusion Matrix")
-    print(cm)
+dt_acc = accuracy_score(y_test, dt_pred)
+dt_prec = precision_score(y_test, dt_pred)
+dt_rec = recall_score(y_test, dt_pred)
+dt_f1 = f1_score(y_test, dt_pred)
+dt_auc = roc_auc_score(y_test, dt_prob)
+dt_cm = confusion_matrix(y_test, dt_pred)
+
+print("Accuracy Score :", round(dt_acc,4))
+print("Precision Score:", round(dt_prec,4))
+print("Recall Score   :", round(dt_rec,4))
+print("F1 Score       :", round(dt_f1,4))
+print("ROC-AUC        :", round(dt_auc,4))
+print("Confusion Matrix")
+print(dt_cm)
+
+
+# random forest on test set
+print("\nRandom Forest")
+
+rf_pred = rf_best.predict(X_test)
+rf_prob = rf_best.predict_proba(X_test)[:,1]
+
+rf_acc = accuracy_score(y_test, rf_pred)
+rf_prec = precision_score(y_test, rf_pred)
+rf_rec = recall_score(y_test, rf_pred)
+rf_f1 = f1_score(y_test, rf_pred)
+rf_auc = roc_auc_score(y_test, rf_prob)
+rf_cm = confusion_matrix(y_test, rf_pred)
+
+print("Accuracy Score :", round(rf_acc,4))
+print("Precision Score:", round(rf_prec,4))
+print("Recall Score   :", round(rf_rec,4))
+print("F1 Score       :", round(rf_f1,4))
+print("ROC-AUC        :", round(rf_auc,4))
+print("Confusion Matrix")
+print(rf_cm)
+
+
 # plots
 
 print("\nCreating plots")
 
-# confusion matrices
+# confusion matrices for all 3 models
 fig, axes = plt.subplots(1,3, figsize=(18,5))
 
-for idx, (name, res) in enumerate(results.items()):
-    cm = res['cm']
-    ax = axes[idx]
+# logistic regression cm
+axes[0].imshow(lr_cm, cmap='Blues')
+axes[0].set_title('Logistic Regression\nAcc: ' + str(round(lr_acc,4)) + ' | F1: ' + str(round(lr_f1,4)))
+axes[0].set_xticks([0,1])
+axes[0].set_yticks([0,1])
+axes[0].set_xticklabels(['On-Time','Late'])
+axes[0].set_yticklabels(['On-Time','Late'])
+axes[0].set_xlabel('Predicted')
+axes[0].set_ylabel('Actual')
 
-    ax.imshow(cm, cmap='Blues')
-    ax.set_title(name + "\nAcc: " + str(round(res['accuracy'],4)) +
-                 " | F1: " + str(round(res['f1'],4)))
+for i in range(2):
+    for j in range(2):
+        axes[0].text(j, i, str(lr_cm[i,j]), ha='center', va='center')
 
-    ax.set_xticks([0,1])
-    ax.set_yticks([0,1])
-    ax.set_xticklabels(['On-Time','Late'])
-    ax.set_yticklabels(['On-Time','Late'])
-    ax.set_xlabel('Predicted')
-    ax.set_ylabel('Actual')
+# decision tree cm
+axes[1].imshow(dt_cm, cmap='Blues')
+axes[1].set_title('Decision Tree\nAcc: ' + str(round(dt_acc,4)) + ' | F1: ' + str(round(dt_f1,4)))
+axes[1].set_xticks([0,1])
+axes[1].set_yticks([0,1])
+axes[1].set_xticklabels(['On-Time','Late'])
+axes[1].set_yticklabels(['On-Time','Late'])
+axes[1].set_xlabel('Predicted')
+axes[1].set_ylabel('Actual')
 
-    for i in range(2):
-        for j in range(2):
-            ax.text(j, i, str(cm[i,j]), ha='center', va='center')
+for i in range(2):
+    for j in range(2):
+        axes[1].text(j, i, str(dt_cm[i,j]), ha='center', va='center')
+
+# random forest cm
+axes[2].imshow(rf_cm, cmap='Blues')
+axes[2].set_title('Random Forest\nAcc: ' + str(round(rf_acc,4)) + ' | F1: ' + str(round(rf_f1,4)))
+axes[2].set_xticks([0,1])
+axes[2].set_yticks([0,1])
+axes[2].set_xticklabels(['On-Time','Late'])
+axes[2].set_yticklabels(['On-Time','Late'])
+axes[2].set_xlabel('Predicted')
+axes[2].set_ylabel('Actual')
+
+for i in range(2):
+    for j in range(2):
+        axes[2].text(j, i, str(rf_cm[i,j]), ha='center', va='center')
 
 plt.suptitle('Confusion Matrices')
 plt.tight_layout()
@@ -294,24 +337,23 @@ plt.savefig('results/plots/05_confusion_matrices.png',
 
 plt.close()
 
-
-# model comparison
 fig, ax = plt.subplots(figsize=(11,6))
 
 metrics_names = ['Accuracy','Precision','Recall','F1','AUC']
-metrics_keys = ['accuracy','precision','recall','f1','auc']
-
 x = np.arange(len(metrics_names))
 width = 0.25
-colors_list = ['#3498db','#2ecc71','#e74c3c']
 
-for i, (name, res) in enumerate(results.items()):
-    vals = [res[k] for k in metrics_keys]
-    ax.bar(x + i*width, vals, width, label=name, color=colors_list[i])
+lr_vals = [lr_acc, lr_prec, lr_rec, lr_f1, lr_auc]
+dt_vals = [dt_acc, dt_prec, dt_rec, dt_f1, dt_auc]
+rf_vals = [rf_acc, rf_prec, rf_rec, rf_f1, rf_auc]
+
+ax.bar(x - width, lr_vals, width, label='Logistic Regression', color='#3498db')
+ax.bar(x, dt_vals, width, label='Decision Tree', color='#2ecc71')
+ax.bar(x + width, rf_vals, width, label='Random Forest', color='#e74c3c')
 
 ax.set_title('Model Comparison')
 ax.set_ylabel('Score')
-ax.set_xticks(x + width)
+ax.set_xticks(x)
 ax.set_xticklabels(metrics_names)
 ax.legend()
 ax.set_ylim(0.93,1.01)
@@ -325,7 +367,6 @@ plt.savefig('results/plots/06_model_comparison.png',
 plt.close()
 
 
-# random forest feature importance
 fig, ax = plt.subplots(figsize=(10,8))
 
 feature_imp = pd.Series(rf_best.feature_importances_, index=X_train.columns)
@@ -349,13 +390,15 @@ print("Plots saved")
 # roc curves
 fig, ax = plt.subplots(figsize=(9,7))
 
-for name, (model, xdata) in models.items():
-    prob = model.predict_proba(xdata)[:,1]
-    fpr, tpr, _ = roc_curve(y_test, prob)
-    auc_val = roc_auc_score(y_test, prob)
-    ax.plot(fpr, tpr, label=name + ' (AUC = ' + str(round(auc_val,4)) + ')', linewidth=2)
+fpr_lr, tpr_lr, _ = roc_curve(y_test, lr_prob)
+ax.plot(fpr_lr, tpr_lr, label='Logistic Regression (AUC = ' + str(round(lr_auc,4)) + ')', linewidth=2)
 
-# diagonal line for random model
+fpr_dt, tpr_dt, _ = roc_curve(y_test, dt_prob)
+ax.plot(fpr_dt, tpr_dt, label='Decision Tree (AUC = ' + str(round(dt_auc,4)) + ')', linewidth=2)
+
+fpr_rf, tpr_rf, _ = roc_curve(y_test, rf_prob)
+ax.plot(fpr_rf, tpr_rf, label='Random Forest (AUC = ' + str(round(rf_auc,4)) + ')', linewidth=2)
+
 ax.plot([0,1], [0,1], 'k--', label='Random (AUC = 0.5)')
 
 ax.set_xlabel('False Positive Rate')
@@ -373,40 +416,21 @@ plt.savefig('results/plots/08_roc_curves.png',
 plt.close()
 
 
-# save trained models
+# save models
 
 print("\nSaving models")
 
-with open('results/trained_models.pkl', 'wb') as f:
-    pickle.dump({
-        'logistic_regression': lr_best,
-        'decision_tree': dt_best,
-        'random_forest': rf_best,
-        'lr_best_params': lr_grid.best_params_,
-        'dt_best_params': dt_grid.best_params_,
-        'rf_best_params': rf_grid.best_params_,
-        'results': results
-    }, f)
+with open('results/lr_model.pkl', 'wb') as f:
+    pickle.dump(lr_best, f)
+print("Saved: results/lr_model.pkl")
 
-print("Saved: results/trained_models.pkl")
+with open('results/dt_model.pkl', 'wb') as f:
+    pickle.dump(dt_best, f)
+print("Saved: results/dt_model.pkl")
 
+with open('results/rf_model.pkl', 'wb') as f:
+    pickle.dump(rf_best, f)
+print("Saved: results/rf_model.pkl")
 
-# final summary
-
-print("\nFinal test summary")
-
-print("Model               Acc      Prec     Recall   F1       AUC")
-print("----------------------------------------------------------")
-
-for name, res in results.items():
-    print(
-        f"{name:20s} "
-        f"{res['accuracy']:.4f}   "
-        f"{res['precision']:.4f}   "
-        f"{res['recall']:.4f}   "
-        f"{res['f1']:.4f}   "
-        f"{res['auc']:.4f}"
-    )
-
-print("\nBaseline late rate:", 0.5483)
+print("\nBaseline late rate: 0.5483")
 print("Models and plots saved")
