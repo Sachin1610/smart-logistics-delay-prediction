@@ -2,6 +2,10 @@
 
 Final project for Machine Learning (Spring 2026).
 
+## Dataset Source
+
+Dataset link: https://www.kaggle.com/datasets/saicharankomati/dataco-supply-chain-dataset
+
 **Important:** The original dataset is uploaded as a ZIP file 
 (`DataCoSupplyChainDataset.zip`) due to GitHub size limits. 
 Before running preprocessing, please unzip it first:
@@ -48,7 +52,7 @@ data/
 notebooks/          
 src/                
 results/plots/      
-report/             
+Paper/             
 
 README.md
 requirements.txt
